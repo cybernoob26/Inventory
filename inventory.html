@@ -1,1 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>INVENTORY</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inventory">
+<meta name="theme-color" content="#16161a">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#16161a;color:#c8c8b8;font-family:'EB Garamond',serif;overflow:hidden;}
 
+/* ═══════════════════════════════════
+   LAYOUT — desktop: 3 col, portrait: stacked panels
+═══════════════════════════════════ */
+.app{
+  display:flex;height:100vh;
+  background-image:
+    radial-gradient(ellipse at 65% 35%,rgba(55,55,75,0.3) 0%,transparent 60%),
+    radial-gradient(ellipse at 15% 85%,rgba(25,20,15,0.7) 0%,transparent 55%);
+  position:relative;overflow:hidden;
+}
+
+/* ═══ LEFT: CATEGORIES ═══ */
+.col-cats{
+  width:155px;flex-shrink:0;
+  background:rgba(8,8,10,0.85);
+  border-right:1px solid rgba(255,255,255,0.06);
+  display:flex;flex-direction:column;
+  transition:transform 0.3s ease,opacity 0.3s ease;
+  z-index:10;
+}
+.cats-top{
+  padding:20px 16px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.cats-top-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:rgba(195,185,160,0.35);}
+.cats-add-btn{
+  width:24px;height:24px;
+  background:rgba(200,175,130,0.08);border:1px solid rgba(200,175,130,0.25);
+  color:rgba(200,175,130,0.7);font-size:16px;line-height:1;
+  cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;
+}
+.cats-add-btn:hover{background:rgba(200,175,130,0.18);color:#fff;}
+
+.cats-list{flex:1;overflow-y:auto;padding:8px 0;}
+.cat-label{
+  padding:11px 20px;
+  font-family:'Cinzel',serif;font-size:12px;letter-spacing:1.5px;
+  color:rgba(195,190,170,0.45);cursor:pointer;transition:color 0.15s;
+  user-select:none;display:flex;align-items:center;justify-content:space-between;gap:6px;
+}
+.cat-label:hover{color:rgba(195,190,170,0.8);}
+.cat-label.active{color:#fff;font-weight:700;}
+.cat-del{
+  opacity:0;font-size:12px;color:rgba(200,80,80,0.6);
+  background:none;border:none;cursor:pointer;padding:0 2px;transition:opacity 0.2s;
+  flex-shrink:0;
+}
+.cat-label:hover .cat-del{opacity:1;}
+.cat-del:hover{color:#cc4444;}
+
+.cats-footer{
+  padding:10px 12px 16px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  display:flex;flex-direction:column;gap:5px;
+}
+.cats-act-btn{
+  padding:7px 10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;
+  color:rgba(195,175,135,0.45);background:none;
+  border:1px solid rgba(195,175,135,0.15);cursor:pointer;transition:all 0.2s;text-align:center;
+}
+.cats-act-btn:hover{color:rgba(195,175,135,0.85);border-color:rgba(195,175,135,0.4);background:rgba(195,175,135,0.06);}
+
+/* ═══ MIDDLE: LIST ═══ */
+.col-list{
+  width:240px;flex-shrink:0;
+  background:rgba(12,12,15,0.5);
+  border-right:1px solid rgba(255,255,255,0.05);
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:transform 0.3s ease;z-index:9;
+}
+.list-header{
+  padding:18px 18px 8px;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;
+  color:rgba(195,185,160,0.4);
+  display:flex;align-items:center;gap:10px;
+}
+.list-back-btn{
+  background:none;border:none;color:rgba(200,175,130,0.6);
+  font-size:16px;cursor:pointer;padding:0;display:none;
+  transition:color 0.2s;
+}
+.list-back-btn:hover{color:rgba(200,175,130,1);}
+.list-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;}
+.list-body::-webkit-scrollbar{width:3px;}
+.list-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.list-row{
+  padding:8px 18px;font-size:16px;
+  color:rgba(205,200,182,0.65);cursor:pointer;
+  transition:color 0.1s,background 0.1s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;
+}
+.list-row:hover{color:rgba(220,215,195,0.9);background:rgba(255,255,255,0.025);}
+.list-row.sel{color:#fff;font-weight:600;}
+.list-empty{padding:40px 18px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:rgba(195,190,170,0.2);}
+
+.add-open-btn{
+  padding:10px 18px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:rgba(200,175,130,0.4);cursor:pointer;background:none;border:none;
+  text-align:left;transition:color 0.2s;width:100%;
+}
+.add-open-btn:hover{color:rgba(200,175,130,0.75);}
+.add-form{
+  border-top:1px solid rgba(255,255,255,0.06);
+  padding:12px 14px;background:rgba(8,8,10,0.6);
+  display:none;flex-direction:column;gap:8px;
+}
+.add-form.open{display:flex;}
+.add-form input{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  color:#e0dcc8;font-family:'EB Garamond',serif;font-size:15px;
+  padding:6px 10px;outline:none;transition:border-color 0.2s;width:100%;
+}
+.add-form input:focus{border-color:rgba(200,175,130,0.45);}
+.add-form input::placeholder{color:rgba(195,185,160,0.25);font-style:italic;}
+.add-form-btns{display:flex;gap:6px;}
+.afbtn{flex:1;padding:7px 6px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;cursor:pointer;border:1px solid;background:transparent;transition:all 0.15s;}
+.afbtn-ok{color:rgba(200,175,130,0.85);border-color:rgba(200,175,130,0.3);}
+.afbtn-ok:hover{background:rgba(200,175,130,0.1);color:#fff;border-color:rgba(200,175,130,0.6);}
+.afbtn-x{color:rgba(195,185,160,0.35);border-color:rgba(255,255,255,0.08);}
+.afbtn-x:hover{color:rgba(195,185,160,0.7);}
+
+/* ═══ RIGHT: DETAIL ═══ */
+.col-detail{
+  flex:1;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  transition:transform 0.3s ease;z-index:8;
+}
+.detail-back-btn{
+  position:absolute;top:16px;left:16px;z-index:20;
+  background:rgba(0,0,0,0.5);border:1px solid rgba(200,175,130,0.25);
+  color:rgba(200,175,130,0.7);font-size:18px;
+  width:36px;height:36px;cursor:pointer;transition:all 0.2s;
+  display:none;align-items:center;justify-content:center;
+}
+.detail-back-btn:hover{color:#fff;border-color:rgba(200,175,130,0.6);}
+
+.float-img{position:absolute;inset:0;bottom:160px;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.float-img img{
+  max-width:68%;max-height:58%;object-fit:contain;
+  mask-image:radial-gradient(ellipse 78% 72% at 50% 50%,black 25%,rgba(0,0,0,0.6) 55%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 78% 72% at 50% 50%,black 25%,rgba(0,0,0,0.6) 55%,transparent 78%);
+  filter:drop-shadow(0 12px 40px rgba(0,0,0,0.8));opacity:0.95;
+}
+.float-placeholder{position:absolute;inset:0;bottom:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0.12;pointer-events:none;}
+.float-placeholder-icon{font-size:56px;}
+.float-placeholder-txt{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#fff;}
+.img-tap{position:absolute;inset:0;bottom:160px;cursor:pointer;z-index:5;}
+.img-tap-hint{position:absolute;bottom:10px;width:100%;text-align:center;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(200,175,130,0.5);opacity:0;transition:opacity 0.2s;}
+.img-tap:hover .img-tap-hint{opacity:1;}
+
+.info-box{position:relative;z-index:10;margin:0 24px 24px;background:rgba(0,0,0,0.76);border:1px solid rgba(220,215,195,0.18);padding:14px 20px 12px;}
+.info-box::before{content:'';position:absolute;top:-1px;left:-1px;width:10px;height:10px;border-top:2px solid rgba(200,175,130,0.5);border-left:2px solid rgba(200,175,130,0.5);}
+.info-box::after{content:'';position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-bottom:2px solid rgba(200,175,130,0.5);border-right:2px solid rgba(200,175,130,0.5);}
+.ib-tr{position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-top:2px solid rgba(200,175,130,0.5);border-right:2px solid rgba(200,175,130,0.5);}
+.ib-bl{position:absolute;bottom:-1px;left:-1px;width:10px;height:10px;border-bottom:2px solid rgba(200,175,130,0.5);border-left:2px solid rgba(200,175,130,0.5);}
+.ib-name{font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:#fff;text-align:center;letter-spacing:2px;}
+.ib-divider{height:1px;background:rgba(255,255,255,0.15);margin:10px 0;}
+.ib-row{display:flex;justify-content:center;gap:36px;}
+.ib-stat-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(195,185,160,0.45);text-align:center;margin-bottom:2px;}
+.ib-stat-val{font-family:'Cinzel',serif;font-size:11px;color:#fff;text-align:center;}
+.ib-tag{text-align:center;font-size:14px;font-style:italic;color:rgba(195,185,160,0.65);margin-top:8px;}
+.ib-actions{display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+.iact{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(195,185,160,0.4);background:none;border:none;cursor:pointer;transition:color 0.2s;}
+.iact:hover{color:rgba(195,185,160,0.9);}
+.iact.del:hover{color:#cc5555;}
+.iact.journal-btn{color:rgba(160,185,200,0.4);}
+.iact.journal-btn:hover{color:rgba(160,185,200,0.9);}
+.ib-edit-name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:#fff;text-align:center;letter-spacing:2px;background:rgba(255,255,255,0.05);border:1px solid rgba(200,175,130,0.3);width:100%;padding:4px 8px;outline:none;}
+.ib-edit-tag{font-family:'EB Garamond',serif;font-size:14px;font-style:italic;color:rgba(195,185,160,0.8);text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);width:100%;padding:3px 8px;outline:none;margin-top:8px;}
+.detail-empty-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:rgba(195,185,160,0.12);}
+
+/* ═══ JOURNAL OVERLAY ═══ */
+.journal-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:#0f0f12;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.journal-overlay.open{transform:translateY(0);}
+.journal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(0,0,0,0.4);
+  flex-shrink:0;
+}
+.journal-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:rgba(200,175,130,0.8);}
+.journal-close{
+  background:none;border:none;color:rgba(195,185,160,0.5);
+  font-size:22px;cursor:pointer;transition:color 0.2s;line-height:1;padding:4px;
+}
+.journal-close:hover{color:#fff;}
+.journal-body{
+  flex:1;overflow-y:auto;padding:24px 24px 40px;
+}
+.journal-textarea{
+  width:100%;height:100%;min-height:400px;
+  background:transparent;border:none;outline:none;resize:none;
+  font-family:'EB Garamond',serif;font-size:17px;line-height:1.75;
+  color:rgba(215,210,190,0.85);
+  caret-color:rgba(200,175,130,0.8);
+}
+.journal-textarea::placeholder{color:rgba(195,185,160,0.2);font-style:italic;}
+.journal-footer{
+  padding:10px 20px 16px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
+}
+.journal-save-btn{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;
+  color:rgba(200,175,130,0.5);background:none;border:1px solid rgba(200,175,130,0.2);
+  padding:7px 16px;cursor:pointer;transition:all 0.2s;
+}
+.journal-save-btn:hover{color:rgba(200,175,130,0.9);border-color:rgba(200,175,130,0.5);background:rgba(200,175,130,0.07);}
+.journal-wordcount{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(195,185,160,0.25);}
+
+/* ═══ CAT ADD INLINE ═══ */
+.cat-add-form{
+  padding:8px 14px;background:rgba(0,0,0,0.4);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:none;flex-direction:column;gap:6px;
+}
+.cat-add-form.open{display:flex;}
+.cat-add-form input{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#e0dcc8;font-family:'EB Garamond',serif;font-size:14px;
+  padding:5px 8px;outline:none;width:100%;
+}
+.cat-add-form input:focus{border-color:rgba(200,175,130,0.4);}
+.cat-add-form-btns{display:flex;gap:5px;}
+.cafbtn{flex:1;padding:5px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;cursor:pointer;border:1px solid;background:transparent;transition:all 0.15s;}
+.cafbtn-ok{color:rgba(200,175,130,0.8);border-color:rgba(200,175,130,0.25);}
+.cafbtn-ok:hover{background:rgba(200,175,130,0.1);color:#fff;}
+.cafbtn-x{color:rgba(195,185,160,0.3);border-color:rgba(255,255,255,0.07);}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);border:1px solid rgba(200,175,130,0.3);color:rgba(200,175,130,0.9);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 20px;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+input[type=file]{display:none;}
+
+/* ═══ PORTRAIT MOBILE NAV ═══ */
+/* 
+  Portrait: 3 "pages" — cats | list | detail
+  We use translateX to slide between them
+  State tracked via body data-view attribute: "cats" | "list" | "detail"
+*/
+@media(max-width:640px) and (orientation:portrait){
+  .app{position:relative;overflow:hidden;}
+
+  .col-cats,.col-list,.col-detail{
+    position:absolute;top:0;bottom:0;width:100%;
+    transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* default: show cats */
+  .col-cats{transform:translateX(0);z-index:10;}
+  .col-list{transform:translateX(100%);z-index:9;}
+  .col-detail{transform:translateX(200%);z-index:8;}
+
+  /* view=list */
+  body[data-view="list"] .col-cats{transform:translateX(-100%);}
+  body[data-view="list"] .col-list{transform:translateX(0);}
+  body[data-view="list"] .col-detail{transform:translateX(100%);}
+
+  /* view=detail */
+  body[data-view="detail"] .col-cats{transform:translateX(-100%);}
+  body[data-view="detail"] .col-list{transform:translateX(-100%);}
+  body[data-view="detail"] .col-detail{transform:translateX(0);}
+
+  .list-back-btn{display:flex!important;}
+  .detail-back-btn{display:flex!important;}
+  .col-list{width:100%;}
+  .col-detail{width:100%;}
+}
+</style>
+</head>
+<body data-view="cats">
+<div class="app">
+
+  <!-- CATEGORIES -->
+  <div class="col-cats">
+    <div class="cats-top">
+      <span class="cats-top-title">CATEGORIES</span>
+      <button class="cats-add-btn" onclick="toggleCatAdd()" title="Add category">＋</button>
+    </div>
+    <div class="cat-add-form" id="catAddForm">
+      <input id="catAddInput" placeholder="Category name..." maxlength="20" />
+      <div class="cat-add-form-btns">
+        <button class="cafbtn cafbtn-x" onclick="closeCatAdd()">CANCEL</button>
+        <button class="cafbtn cafbtn-ok" onclick="doAddCat()">ADD</button>
+      </div>
+    </div>
+    <div class="cats-list" id="catsList"></div>
+    <div class="cats-footer">
+      <button class="cats-act-btn" onclick="doExport()">⬇ SAVE</button>
+      <button class="cats-act-btn" onclick="document.getElementById('importInput').click()">⬆ LOAD</button>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="col-list">
+    <div class="list-header">
+      <button class="list-back-btn" onclick="goView('cats')" title="Back">‹</button>
+      <span id="listTitle">ITEMS</span>
+    </div>
+    <div class="list-body" id="listBody"></div>
+    <button class="add-open-btn" onclick="toggleAdd()">＋ ADD ITEM</button>
+    <div class="add-form" id="addForm">
+      <input id="aName" placeholder="Item name..." maxlength="60" />
+      <input id="aTag"  placeholder="Enchantment / tag..." maxlength="100" />
+      <div class="add-form-btns">
+        <button class="afbtn afbtn-x" onclick="closeAdd()">CANCEL</button>
+        <button class="afbtn afbtn-ok" onclick="doAdd()">ADD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="col-detail" id="colDetail">
+    <button class="detail-back-btn" onclick="goView('list')" title="Back">‹</button>
+    <div class="detail-empty-msg" id="detailEmpty">SELECT AN ITEM</div>
+  </div>
+
+</div>
+
+<!-- JOURNAL OVERLAY -->
+<div class="journal-overlay" id="journalOverlay">
+  <div class="journal-header">
+    <span class="journal-title" id="journalTitle">JOURNAL</span>
+    <button class="journal-close" onclick="closeJournal()">×</button>
+  </div>
+  <div class="journal-body">
+    <textarea class="journal-textarea" id="journalText" placeholder="Write your entry here...&#10;&#10;What does this item mean to you? Where did it come from? What do you notice when you hold it?" oninput="updateWordCount()"></textarea>
+  </div>
+  <div class="journal-footer">
+    <button class="journal-save-btn" onclick="saveJournal()">SAVE ENTRY</button>
+    <span class="journal-wordcount" id="wordCount">0 WORDS</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="imgInput"    accept="image/*"    onchange="onImg(event)" />
+<input type="file" id="importInput" accept=".json,.inv" onchange="doImport(event)" />
+
+<script>
+// ── DEFAULT CATS (can't be deleted)
+const DEFAULT_CATS=[
+  {id:'crystals', label:'CRYSTALS', icon:'💎', locked:true},
+  {id:'weapons',  label:'WEAPONS',  icon:'⚔️', locked:true},
+  {id:'books',    label:'BOOKS',    icon:'📖', locked:true},
+  {id:'quests',   label:'QUESTS',   icon:'🗺️', locked:true},
+  {id:'potions',  label:'POTIONS',  icon:'⚗️', locked:true},
+];
+
+const SK='skyrim_inv_v5';
+let S={cat:'crystals',sel:null,edit:false,items:[],cats:[...DEFAULT_CATS]};
+let pendImg=null;
+let journalItemId=null;
+
+function load(){
+  try{
+    const r=localStorage.getItem(SK);
+    if(r){
+      const d=JSON.parse(r);
+      S.items=d.items||[];
+      // merge saved custom cats
+      if(d.cats){
+        const customCats=d.cats.filter(c=>!DEFAULT_CATS.find(dc=>dc.id===c.id));
+        S.cats=[...DEFAULT_CATS,...customCats];
+      }
+    }
+  }catch(e){}
+}
+function persist(){
+  try{localStorage.setItem(SK,JSON.stringify({items:S.items,cats:S.cats}));}catch(e){}
+}
+function catItems(){return S.items.filter(i=>i.cat===S.cat);}
+function getCat(){return S.cats.find(c=>c.id===S.cat)||S.cats[0];}
+function getItem(){return S.items.find(i=>i.id===S.sel);}
+function h(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function goView(v){
+  document.body.setAttribute('data-view',v);
+}
+
+// ── CATS
+function renderCats(){
+  const el=document.getElementById('catsList');
+  el.innerHTML=S.cats.map(c=>`
+    <div class="cat-label${S.cat===c.id?' active':''}" onclick="setCat('${c.id}')">
+      <span>${c.label}</span>
+      ${!c.locked?`<button class="cat-del" onclick="event.stopPropagation();deleteCat('${c.id}')" title="Remove">×</button>`:''}
+    </div>`
+  ).join('');
+}
+
+function setCat(id){
+  S.cat=id;S.sel=null;S.edit=false;closeAdd();
+  document.getElementById('listTitle').textContent=getCat().label;
+  render();
+  goView('list');
+}
+
+function toggleCatAdd(){
+  const f=document.getElementById('catAddForm');
+  if(f.classList.contains('open')){closeCatAdd();}
+  else{f.classList.add('open');setTimeout(()=>document.getElementById('catAddInput').focus(),50);}
+}
+function closeCatAdd(){
+  document.getElementById('catAddForm').classList.remove('open');
+  document.getElementById('catAddInput').value='';
+}
+function doAddCat(){
+  const name=document.getElementById('catAddInput').value.trim().toUpperCase();
+  if(!name)return;
+  const id='cat_'+Date.now().toString(36);
+  S.cats.push({id,label:name,icon:'📦',locked:false});
+  closeCatAdd();persist();renderCats();
+  toast('CATEGORY ADDED');
+}
+function deleteCat(id){
+  const hasItems=S.items.some(i=>i.cat===id);
+  if(hasItems){toast('REMOVE ITEMS FIRST');return;}
+  S.cats=S.cats.filter(c=>c.id!==id);
+  if(S.cat===id){S.cat=S.cats[0].id;S.sel=null;}
+  persist();render();
+}
+
+// ── LIST
+function renderList(){
+  const items=catItems();
+  const lb=document.getElementById('listBody');
+  document.getElementById('listTitle').textContent=getCat().label;
+  if(!items.length){lb.innerHTML=`<div class="list-empty">NO ITEMS</div>`;return;}
+  lb.innerHTML=items.map(it=>
+    `<div class="list-row${S.sel===it.id?' sel':''}" onclick="selItem('${it.id}')">${h(it.name)}</div>`
+  ).join('');
+}
+
+function selItem(id){
+  S.sel=id;S.edit=false;
+  renderDetail();
+  goView('detail');
+}
+
+// ── DETAIL
+function renderDetail(){
+  const panel=document.getElementById('colDetail');
+  const emptyMsg=document.getElementById('detailEmpty');
+  const item=getItem();
+  const cat=getCat();
+
+  panel.querySelectorAll('.float-img,.float-placeholder,.img-tap,.info-box').forEach(e=>e.remove());
+
+  if(!item){
+    emptyMsg.style.display='flex';
+    const ph=document.createElement('div');
+    ph.className='float-placeholder';
+    ph.innerHTML=`<div class="float-placeholder-icon">${cat.icon}</div><div class="float-placeholder-txt">SELECT AN ITEM</div>`;
+    panel.appendChild(ph);
+    return;
+  }
+  emptyMsg.style.display='none';
+
+  if(item.image){
+    const fd=document.createElement('div');fd.className='float-img';
+    fd.innerHTML=`<img src="${item.image}" alt="">`;
+    panel.appendChild(fd);
+  } else {
+    const ph=document.createElement('div');ph.className='float-placeholder';
+    ph.innerHTML=`<div class="float-placeholder-icon">${cat.icon}</div><div class="float-placeholder-txt">TAP TO ADD PHOTO</div>`;
+    panel.appendChild(ph);
+  }
+
+  const tz=document.createElement('div');tz.className='img-tap';
+  tz.innerHTML=`<div class="img-tap-hint">${item.image?'CHANGE PHOTO':'ADD PHOTO'}</div>`;
+  tz.onclick=()=>{pendImg=item.id;document.getElementById('imgInput').click();};
+  panel.appendChild(tz);
+
+  const box=document.createElement('div');box.className='info-box';
+  if(S.edit){
+    box.innerHTML=`
+      <div class="ib-tr"></div><div class="ib-bl"></div>
+      <input class="ib-edit-name" id="eName" value="${h(item.name)}" maxlength="60">
+      <input class="ib-edit-tag" id="eTag" value="${h(item.tag||'')}" maxlength="100" placeholder="Enchantment / tag...">
+      <div class="ib-actions">
+        <button class="iact" onclick="saveEdit()">SAVE</button>
+        <button class="iact" onclick="S.edit=false;renderDetail()">CANCEL</button>
+      </div>`;
+  } else {
+    const date=new Date(item.created).toLocaleDateString('en-AU',{day:'numeric',month:'short'}).toUpperCase();
+    const hasJournal=item.journal&&item.journal.trim().length>0;
+    box.innerHTML=`
+      <div class="ib-tr"></div><div class="ib-bl"></div>
+      <div class="ib-name">${h(item.name)}</div>
+      <div class="ib-divider"></div>
+      <div class="ib-row">
+        <div><div class="ib-stat-label">ACQUIRED</div><div class="ib-stat-val">${date}</div></div>
+        <div><div class="ib-stat-label">CATEGORY</div><div class="ib-stat-val">${cat.label}</div></div>
+      </div>
+      ${item.tag?`<div class="ib-tag">${h(item.tag)}</div>`:''}
+      <div class="ib-actions">
+        <button class="iact" onclick="S.edit=true;renderDetail()">EDIT</button>
+        <button class="iact journal-btn" onclick="openJournal('${item.id}')">${hasJournal?'JOURNAL ✦':'JOURNAL'}</button>
+        <button class="iact del" onclick="dropItem('${item.id}')">DROP</button>
+      </div>`;
+  }
+  panel.appendChild(box);
+}
+
+function render(){renderCats();renderList();renderDetail();}
+
+// ── ADD ITEM
+function toggleAdd(){
+  const f=document.getElementById('addForm');
+  if(f.classList.contains('open')){closeAdd();}
+  else{f.classList.add('open');setTimeout(()=>document.getElementById('aName').focus(),50);}
+}
+function closeAdd(){
+  document.getElementById('addForm').classList.remove('open');
+  document.getElementById('aName').value='';
+  document.getElementById('aTag').value='';
+}
+function doAdd(){
+  const name=document.getElementById('aName').value.trim();
+  if(!name){document.getElementById('aName').focus();return;}
+  const item={
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2),
+    name,tag:document.getElementById('aTag').value.trim(),
+    image:null,journal:'',cat:S.cat,created:Date.now()
+  };
+  S.items.push(item);
+  S.sel=item.id;
+  closeAdd();persist();render();
+  goView('detail');
+}
+
+function dropItem(id){
+  S.items=S.items.filter(i=>i.id!==id);
+  S.sel=null;S.edit=false;
+  persist();render();
+  goView('list');
+  toast('ITEM DROPPED');
+}
+
+function saveEdit(){
+  const item=getItem();if(!item)return;
+  const n=document.getElementById('eName').value.trim();if(!n)return;
+  item.name=n;item.tag=document.getElementById('eTag').value.trim();
+  S.edit=false;persist();render();
+}
+
+// ── JOURNAL
+function openJournal(id){
+  const item=S.items.find(i=>i.id===id);
+  if(!item)return;
+  journalItemId=id;
+  document.getElementById('journalTitle').textContent=item.name.toUpperCase()+' — JOURNAL';
+  document.getElementById('journalText').value=item.journal||'';
+  updateWordCount();
+  document.getElementById('journalOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('journalText').focus(),350);
+}
+function closeJournal(){
+  document.getElementById('journalOverlay').classList.remove('open');
+  journalItemId=null;
+}
+function saveJournal(){
+  const item=S.items.find(i=>i.id===journalItemId);
+  if(!item)return;
+  item.journal=document.getElementById('journalText').value;
+  persist();renderDetail();
+  toast('JOURNAL SAVED');
+  closeJournal();
+}
+function updateWordCount(){
+  const text=document.getElementById('journalText').value.trim();
+  const words=text?text.split(/\s+/).length:0;
+  document.getElementById('wordCount').textContent=words+' WORD'+(words!==1?'S':'');
+}
+
+// ── IMAGE
+function onImg(e){
+  const f=e.target.files[0];if(!f||!pendImg)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const item=S.items.find(i=>i.id===pendImg);
+    if(item){item.image=ev.target.result;persist();renderDetail();}
+    pendImg=null;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+
+// ── EXPORT / IMPORT
+function doExport(){
+  if(!S.items.length){toast('NO ITEMS TO SAVE');return;}
+  const data=JSON.stringify({version:2,exported:new Date().toISOString(),items:S.items,cats:S.cats},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='inventory-save.inv';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('SAVE FILE DOWNLOADED');
+}
+function doImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.items||!Array.isArray(data.items))throw new Error();
+      S.items=data.items;
+      if(data.cats){
+        const customCats=data.cats.filter(c=>!DEFAULT_CATS.find(dc=>dc.id===c.id));
+        S.cats=[...DEFAULT_CATS,...customCats];
+      }
+      S.sel=null;S.edit=false;
+      persist();render();
+      toast(`LOADED — ${S.items.length} ITEMS RESTORED`);
+    }catch(err){toast('INVALID SAVE FILE');}
+  };
+  r.readAsText(file);
+  e.target.value='';
+}
+
+// ── KEYBOARD
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(document.getElementById('addForm').classList.contains('open'))doAdd();
+    if(document.getElementById('catAddForm').classList.contains('open'))doAddCat();
+  }
+  if(e.key==='Escape'){
+    closeAdd();closeCatAdd();
+    if(S.edit){S.edit=false;renderDetail();}
+    if(document.getElementById('journalOverlay').classList.contains('open'))closeJournal();
+  }
+});
+
+load();
+render();
+document.getElementById('listTitle').textContent=getCat().label;
+
+// Register service worker for offline support
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
